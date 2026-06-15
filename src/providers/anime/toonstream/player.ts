@@ -10,7 +10,7 @@ let subtitle: {
   url: string;
 } | null = null;
 
-export async function moviePlayer(_slug: string) {
+export async function moviePlayer(slug: string) {
   const res = await ScrapeMovieSources(slug);
 
   const sources = res?.sources || [];
@@ -43,7 +43,7 @@ export async function moviePlayer(_slug: string) {
   return makeHtml("Movie", slug);
 }
 
-export async function episodePlayer(_slug: string) {
+export async function episodePlayer(slug: string) {
   const res = await ScrapeEpisodeSources(slug);
 
   const sources = res?.sources || [];
