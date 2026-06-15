@@ -7,11 +7,14 @@ validateConfig();
 
 const app = await createApp();
 
+const isVercel = Boolean(process.env.VERCEL);
+
 if (isDeno) {
   // @ts-expect-error - Deno global
   Deno.serve({ port: PORT }, app.fetch);
-} else {
+} else if (!isVercel) {
   app.listen(PORT);
+  Logger.info(`Started at http://localhost:${PORT}`);
 }
 
-Logger.info(`Started at http://localhost:${PORT}`);
+export default app;

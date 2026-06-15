@@ -1,5 +1,7 @@
 import cors from "@elysiajs/cors";
 import openapi from "@elysiajs/openapi";
+import { access, readFile } from "fs/promises";
+import { constants } from "fs";
 import { join } from "path";
 import { Elysia } from "elysia";
 import { CORS_CREDENTIALS, CORS_ORIGIN, OPENAPI_VERSION } from "./core/config";
@@ -57,17 +59,21 @@ export async function createApp() {
     }),
   );
 
-  const testerHtml = join(import.meta.dir, "..", "tester", "index.html");
+  const testerHtml = process.env.VERCEL
+    ? join(process.cwd(), "tester", "index.html")
+    : join(import.meta.dir, "..", "tester", "index.html");
 
   app
     .get("/tester", async () => {
-      const file = Bun.file(testerHtml);
-      if (!(await file.exists())) {
+      try {
+        await access(testerHtml, constants.F_OK);
+        const html = await readFile(testerHtml, "utf-8");
+        return new Response(html, {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      } catch {
         return new Response("Tester UI not found", { status: 404 });
       }
-      return new Response(await file.text(), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
     }, {
       detail: { tags: ["core"], summary: "API endpoint tester UI" },
     })
