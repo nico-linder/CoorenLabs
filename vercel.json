@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "bunVersion": "1.x",
-  "buildCommand": "bun run build:vercel",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -9,7 +8,7 @@
     }
   ],
   "functions": {
-    "api/index.js": {
+    "api/index.ts": {
       "maxDuration": 60,
       "includeFiles": "tester/**"
     }
