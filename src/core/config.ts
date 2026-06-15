@@ -30,8 +30,9 @@ export const OPENAPI_VERSION = env.OPENAPI_VERSION || "3.0.0";
 // Security Configuration
 export const REQUEST_TIMEOUT = parseInt(env.REQUEST_TIMEOUT || "60000", 10);
 
-// proxy confs
-export const SERVER_ORIGIN = env.SERVER_ORIGIN;
+// proxy confs — default to local server URL in non-production when unset
+export const SERVER_ORIGIN =
+  env.SERVER_ORIGIN || (NODE_ENV !== "production" ? `http://localhost:${PORT}` : "");
 
 export const SHOW_PROXIED_URL = env.SHOW_PROXIED_URL == "true";
 

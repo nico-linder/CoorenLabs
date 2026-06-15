@@ -2,13 +2,12 @@ import { Elysia, t } from "elysia";
 import { AnimeSalt } from "./animesalt";
 import { isTooLarge } from "../../../core/helper";
 import { Logger } from "../../../core/logger";
+import { SERVER_ORIGIN } from "../../../core/config";
 
 import { env } from "../../../core/runtime";
 
-export const SERVER_ORIGIN = env.SERVER_ORIGIN || "";
+export { SERVER_ORIGIN };
 export const PROXIFY = Boolean(env.PROXIFY) || false;
-
-if (!SERVER_ORIGIN && env.NODE_ENV !== "test") throw new Error("set SERVER_ORIGIN at .env!");
 
 Logger.info("auto source proxy is ", PROXIFY);
 

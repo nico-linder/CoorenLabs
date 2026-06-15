@@ -11,10 +11,6 @@ const MAX_MP4_SIZE = 20 * 1024 * 1024 * 1024; // 20 GB
 
 const PLAYLIST_REGEX = /\.m3u|playlist|\.txt/i;
 
-import { env } from "./runtime";
-
-if (!SERVER_ORIGIN && env.NODE_ENV !== "test") throw new Error("set SERVER_ORIGIN at .env!");
-
 export const proxyRoutes = new Elysia({ prefix: "/proxy" })
 
   .get(

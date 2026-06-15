@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cooren API — Swagger Tester</title>
+  <style>
+    :root {
+      --bg: #1b1b1f;
+      --surface: #252529;
+      --surface-2: #2d2d33;
+      --border: #3b3b45;
+      --text: #f0f0f5;
+      --muted: #a0a0ab;
+      --get: #61affe;
+      --get-bg: rgba(97, 175, 254, 0.12);
+      --accent: #e50914;
+      --ok: #49cc90;
+      --err: #f93e3e;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 20;
+    }
+    header h1 { margin: 0; font-size: 1.4rem; }
+    header p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.88rem; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end;
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.25rem; text-transform: uppercase; }
+    .field input, .field select {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 0.45rem 0.6rem; font: inherit; min-width: 180px;
+    }
+    .presets { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+    .chip {
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+      border-radius: 4px; padding: 0.35rem 0.65rem; font-size: 0.82rem; cursor: pointer;
+    }
+    .chip.active { border-color: var(--accent); background: rgba(229,9,20,0.15); }
+    main { max-width: 1100px; margin: 0 auto; padding: 1rem 1.5rem 3rem; }
+    .tag-block { margin-bottom: 1.5rem; }
+    .tag-title {
+      font-size: 1.1rem; font-weight: 600; margin: 0 0 0.75rem;
+      padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+    }
+    .op {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .op.open { border-color: var(--get); }
+    .op-head {
+      display: flex; align-items: stretch; cursor: pointer; user-select: none;
+    }
+    .op-head:hover { background: var(--surface-2); }
+    .method {
+      display: flex; align-items: center; justify-content: center;
+      min-width: 72px; font-weight: 700; font-size: 0.78rem;
+      background: var(--get-bg); color: var(--get);
+    }
+    .op-meta { flex: 1; padding: 0.65rem 0.85rem; min-width: 0; }
+    .op-path { font-family: var(--mono); font-size: 0.88rem; word-break: break-all; }
+    .op-summary { color: var(--muted); font-size: 0.82rem; margin-top: 0.15rem; }
+    .chevron {
+      display: flex; align-items: center; padding: 0 0.85rem; color: var(--muted);
+      transition: transform 0.15s;
+    }
+    .op.open .chevron { transform: rotate(180deg); }
+    .op-body { border-top: 1px solid var(--border); padding: 1rem; background: var(--bg); display: none; }
+    .op.open .op-body { display: block; }
+    .params-title { font-size: 0.85rem; font-weight: 600; margin: 0 0 0.6rem; }
+    table.params { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 1rem; }
+    table.params th, table.params td { border: 1px solid var(--border); padding: 0.45rem 0.55rem; text-align: left; vertical-align: middle; }
+    table.params th { background: var(--surface-2); color: var(--muted); font-weight: 600; }
+    table.params input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 3px; padding: 0.35rem 0.5rem; font: inherit;
+    }
+    .param-loc { color: var(--muted); font-size: 0.75rem; }
+    .req { color: var(--err); margin-left: 2px; }
+    .actions { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .btn {
+      border: none; border-radius: 4px; padding: 0.5rem 1.1rem; font: inherit; cursor: pointer; font-weight: 600;
+    }
+    .btn-exec { background: var(--get); color: #fff; }
+    .btn-exec:hover { filter: brightness(1.08); }
+    .btn-exec:disabled { opacity: 0.5; cursor: wait; }
+    .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .response-box { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .response-meta {
+      display: flex; gap: 0.75rem; align-items: center; padding: 0.55rem 0.75rem;
+      background: var(--surface-2); font-size: 0.82rem; flex-wrap: wrap;
+    }
+    .status.ok { color: var(--ok); font-weight: 700; }
+    .status.err { color: var(--err); font-weight: 700; }
+    .curl { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); word-break: break-all; flex: 1; }
+    pre.body {
+      margin: 0; padding: 0.85rem; max-height: 360px; overflow: auto;
+      font-family: var(--mono); font-size: 0.76rem; line-height: 1.45;
+      white-space: pre-wrap; word-break: break-word; background: #111114;
+    }
+    .empty { color: var(--muted); font-size: 0.85rem; padding: 0.5rem 0; }
+    .loading-bar { color: var(--muted); font-size: 0.85rem; padding: 1rem; text-align: center; }
+    .filter { flex: 1; min-width: 200px; }
+    .filter input { width: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cooren API Tester</h1>
+    <p>Swagger-style — click an endpoint to expand, edit parameters, and run it</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="field">
+      <label>Server</label>
+      <input id="baseUrl" value="" />
+    </div>
+    <div class="field">
+      <label>Preset</label>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="field filter">
+      <label>Filter endpoints</label>
+      <input id="filter" placeholder="Search path or summary…" />
+    </div>
+  </div>
+
+  <main>
+    <div id="app" class="loading-bar">Loading OpenAPI spec…</div>
+  </main>
+
+  <script>
+    const PRESETS = {
+      onepiece: { label: "One Piece", movieTmdb: "1226863", tvTmdb: "37854", query: "One Piece", season: "1", episode: "1" },
+      familyguy: { label: "Family Guy", movieTmdb: "1226863", tvTmdb: "1434", query: "Family Guy", season: "1", episode: "1" },
+      mario: { label: "Mario Galaxy", movieTmdb: "1226863", tvTmdb: "37854", query: "Super Mario Galaxy", season: "1", episode: "1" },
+    };
+
+    const EXTRA_PARAMS = {
+      "/mappings": [
+        { name: "themoviedb_id", in: "query", required: false, schema: { type: "integer" } },
+        { name: "mal_id", in: "query", required: false, schema: { type: "integer" } },
+        { name: "anilist_id", in: "query", required: false, schema: { type: "integer" } },
+      ],
+      "/stream/vidcore/watch": [
+        { name: "type", in: "query", required: true, schema: { type: "string", enum: ["movie", "tv"] } },
+        { name: "id", in: "query", required: true, schema: { type: "string" } },
+        { name: "s", in: "query", required: false, schema: { type: "string" } },
+        { name: "e", in: "query", required: false, schema: { type: "string" } },
+      ],
+      "/music/tidal/search": [
+        { name: "q", in: "query", required: true, schema: { type: "string" } },
+        { name: "limit", in: "query", required: false, schema: { type: "integer", default: 20 } },
+      ],
+    };
+
+    const TAG_ORDER = ["core", "stream", "movie", "anime", "manga", "music", "proxy", "other"];
+    const SKIP_PATHS = new Set(["/tester", "/docs", "/docs/json"]);
+
+    let spec = null;
+    let activePreset = "onepiece";
+    let openOpId = null;
+    let paramValues = {};
+    let filterText = "";
+
+    const $ = (id) => document.getElementById(id);
+
+    function getBase() {
+      return ($("baseUrl").value || window.location.origin).replace(/\/$/, "");
+    }
+
+    function opId(tag, path, method) {
+      return `${tag}::${method}::${path}`;
+    }
+
+    function preset() {
+      return PRESETS[activePreset];
+    }
+
+    function inferDefault(param, path) {
+      const p = preset();
+      const n = param.name.toLowerCase();
+      const pathL = path.toLowerCase();
+
+      if (n === "themoviedb_id") return pathL.includes("movie") ? p.movieTmdb : p.tvTmdb;
+      if (n === "tmdbid") return pathL.includes("/tv/") ? p.tvTmdb : pathL.includes("/movie/") ? p.movieTmdb : p.tvTmdb;
+      if (n === "id") {
+        if (pathL.includes("/movie/") || pathL.includes("type=movie")) return p.movieTmdb;
+        if (pathL.includes("/tv/") || pathL.includes("type=tv")) return p.tvTmdb;
+        return "";
+      }
+      if (n === "season" || n === "s") return p.season;
+      if (n === "episode" || n === "e" || n === "session") return p.episode;
+      if (n === "query" || n === "q") return p.query;
+      if (n === "type") return pathL.includes("/tv") ? "tv" : "movie";
+      if (param.schema?.default !== undefined) return String(param.schema.default);
+      if (param.schema?.enum?.[0]) return param.schema.enum[0];
+      return "";
+    }
+
+    function getParams(path, op) {
+      const extras = EXTRA_PARAMS[path] || [];
+      const fromOp = op.parameters || [];
+      const merged = [...fromOp];
+      for (const ex of extras) {
+        if (!merged.some((p) => p.name === ex.name && p.in === ex.in)) merged.push(ex);
+      }
+      return merged;
+    }
+
+    function initParamValues(id, path, params) {
+      if (!paramValues[id]) {
+        paramValues[id] = {};
+        for (const p of params) {
+          paramValues[id][p.name] = inferDefault(p, path);
+        }
+      }
+    }
+
+    function buildUrl(path, params, values) {
+      let urlPath = path;
+      const query = new URLSearchParams();
+
+      for (const p of params) {
+        const val = values[p.name] ?? "";
+        if (p.in === "path") {
+          urlPath = urlPath.replace(`{${p.name}}`, encodeURIComponent(val));
+        } else if (p.in === "query" && val !== "") {
+          query.set(p.name, val);
+        }
+      }
+
+      const qs = query.toString();
+      return urlPath + (qs ? `?${qs}` : "");
+    }
+
+    function parseOperations(openapi) {
+      const byTag = {};
+      for (const [path, methods] of Object.entries(openapi.paths || {})) {
+        if (SKIP_PATHS.has(path) || path.startsWith("/docs")) continue;
+        for (const [method, op] of Object.entries(methods)) {
+          if (!["get", "post", "put", "delete", "patch"].includes(method)) continue;
+          const tags = op.tags?.length ? op.tags : ["other"];
+          const tag = tags[0];
+          if (!byTag[tag]) byTag[tag] = [];
+          byTag[tag].push({
+            path,
+            method: method.toUpperCase(),
+            summary: op.summary || op.operationId || path,
+            description: op.description || "",
+            parameters: getParams(path, op),
+            tag,
+          });
+        }
+      }
+      for (const arr of Object.values(byTag)) {
+        arr.sort((a, b) => a.path.localeCompare(b.path));
+      }
+      return byTag;
+    }
+
+    function tagLabel(tag, openapi) {
+      const t = openapi.tags?.find((x) => x.name === tag);
+      return t ? `${t.name} — ${t.description || ""}` : tag;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+    }
+
+    function render() {
+      if (!spec) return;
+      const byTag = parseOperations(spec);
+      const filter = filterText.toLowerCase().trim();
+      const app = $("app");
+
+      const tags = Object.keys(byTag).sort((a, b) => {
+        const ia = TAG_ORDER.indexOf(a);
+        const ib = TAG_ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+
+      let html = "";
+      for (const tag of tags) {
+        const ops = byTag[tag].filter((op) => {
+          if (!filter) return true;
+          return op.path.toLowerCase().includes(filter) ||
+            op.summary.toLowerCase().includes(filter) ||
+            op.method.toLowerCase().includes(filter);
+        });
+        if (!ops.length) continue;
+
+        html += `<section class="tag-block"><h2 class="tag-title">${escapeHtml(tagLabel(tag, spec))}</h2>`;
+
+        for (const op of ops) {
+          const id = opId(tag, op.path, op.method);
+          const isOpen = openOpId === id;
+          initParamValues(id, op.path, op.parameters);
+
+          html += `
+            <article class="op ${isOpen ? "open" : ""}" data-id="${escapeHtml(id)}">
+              <div class="op-head" data-toggle="${escapeHtml(id)}">
+                <div class="method">${op.method}</div>
+                <div class="op-meta">
+                  <div class="op-path">${escapeHtml(op.path)}</div>
+                  <div class="op-summary">${escapeHtml(op.summary)}</div>
+                </div>
+                <div class="chevron">▼</div>
+              </div>
+              <div class="op-body">
+                ${renderParams(id, op)}
+                <div class="actions">
+                  <button class="btn btn-exec" data-exec="${escapeHtml(id)}" data-path="${escapeHtml(op.path)}" data-method="${op.method}">Execute</button>
+                  <button class="btn btn-ghost" data-copy="${escapeHtml(id)}" data-path="${escapeHtml(op.path)}">Copy URL</button>
+                </div>
+                <div class="response-box" id="resp-${cssId(id)}">
+                  ${isOpen ? '<div class="empty">Running…</div>' : '<div class="empty">Expand to run this endpoint</div>'}
+                </div>
+              </div>
+            </article>`;
+        }
+        html += `</section>`;
+      }
+
+      app.innerHTML = html || '<p class="empty">No endpoints match your filter.</p>';
+      bindEvents();
+      if (openOpId) execute(openOpId, document.querySelector(`[data-exec="${CSS.escape(openOpId)}"]`)?.dataset.path);
+    }
+
+    function cssId(id) {
+      return id.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+
+    function renderParams(id, op) {
+      if (!op.parameters.length) {
+        return '<p class="empty">No parameters</p>';
+      }
+      const vals = paramValues[id] || {};
+      let rows = op.parameters.map((p) => {
+        const val = vals[p.name] ?? "";
+        const req = p.required ? '<span class="req">*</span>' : "";
+        const enumOpts = p.schema?.enum
+          ? p.schema.enum.map((e) => `<option value="${escapeHtml(e)}" ${e === val ? "selected" : ""}>${escapeHtml(e)}</option>`).join("")
+          : null;
+        const input = enumOpts
+          ? `<select data-param="${escapeHtml(p.name)}" data-op="${escapeHtml(id)}">${enumOpts}</select>`
+          : `<input data-param="${escapeHtml(p.name)}" data-op="${escapeHtml(id)}" value="${escapeHtml(val)}" />`;
+        return `<tr>
+          <td><strong>${escapeHtml(p.name)}</strong>${req}<br><span class="param-loc">${p.in}</span></td>
+          <td>${escapeHtml(p.schema?.type || "string")}</td>
+          <td>${input}</td>
+        </tr>`;
+      }).join("");
+
+      return `
+        <p class="params-title">Parameters</p>
+        <table class="params">
+          <thead><tr><th>Name</th><th>Type</th><th>Value</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    function bindEvents() {
+      document.querySelectorAll("[data-toggle]").forEach((el) => {
+        el.onclick = () => {
+          const id = el.dataset.toggle;
+          const wasOpen = openOpId === id;
+          openOpId = wasOpen ? null : id;
+          render();
+          if (!wasOpen) {
+            const path = document.querySelector(`[data-exec="${CSS.escape(id)}"]`)?.dataset.path;
+            if (path) execute(id, path);
+          }
+        };
+      });
+
+      document.querySelectorAll("[data-param]").forEach((el) => {
+        const handler = () => {
+          const id = el.dataset.op;
+          if (!paramValues[id]) paramValues[id] = {};
+          paramValues[id][el.dataset.param] = el.value;
+        };
+        el.oninput = handler;
+        el.onchange = handler;
+      });
+
+      document.querySelectorAll("[data-exec]").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          execute(btn.dataset.exec, btn.dataset.path);
+        };
+      });
+
+      document.querySelectorAll("[data-copy]").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.copy;
+          const path = btn.dataset.path;
+          const op = findOp(id);
+          if (!op) return;
+          const url = getBase() + buildUrl(path, op.parameters, paramValues[id] || {});
+          navigator.clipboard.writeText(url);
+        };
+      });
+    }
+
+    function findOp(id) {
+      if (!spec) return null;
+      const byTag = parseOperations(spec);
+      for (const ops of Object.values(byTag)) {
+        for (const op of ops) {
+          if (opId(op.tag, op.path, op.method) === id) return op;
+        }
+      }
+      return null;
+    }
+
+    async function execute(id, path) {
+      const op = findOp(id);
+      const box = document.getElementById(`resp-${cssId(id)}`);
+      if (!box || !op) return;
+
+      const values = paramValues[id] || {};
+      const relPath = buildUrl(path, op.parameters, values);
+      const url = getBase() + relPath;
+
+      box.innerHTML = `
+        <div class="response-meta">
+          <span class="status">…</span>
+          <span class="curl">GET ${escapeHtml(url)}</span>
+        </div>
+        <pre class="body">Loading…</pre>`;
+
+      const btn = document.querySelector(`[data-exec="${CSS.escape(id)}"]`);
+      if (btn) btn.disabled = true;
+
+      const start = performance.now();
+      try {
+        const res = await fetch(url);
+        const ms = Math.round(performance.now() - start);
+        const text = await res.text();
+        let body = text;
+        try { body = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+        const cls = res.ok ? "ok" : "err";
+        box.innerHTML = `
+          <div class="response-meta">
+            <span class="status ${cls}">${res.status}</span>
+            <span>${ms} ms</span>
+            <span class="curl">GET ${escapeHtml(url)}</span>
+          </div>
+          <pre class="body">${escapeHtml(body)}</pre>`;
+      } catch (err) {
+        const ms = Math.round(performance.now() - start);
+        box.innerHTML = `
+          <div class="response-meta">
+            <span class="status err">ERR</span>
+            <span>${ms} ms</span>
+          </div>
+          <pre class="body">${escapeHtml(String(err.message || err))}</pre>`;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function renderPresets() {
+      $("presets").innerHTML = Object.entries(PRESETS).map(([key, p]) =>
+        `<button class="chip ${key === activePreset ? "active" : ""}" data-preset="${key}">${p.label}</button>`
+      ).join("");
+      $("presets").querySelectorAll(".chip").forEach((btn) => {
+        btn.onclick = () => {
+          activePreset = btn.dataset.preset;
+          const prevOpen = openOpId;
+          paramValues = {};
+          renderPresets();
+          render();
+          if (prevOpen) {
+            const path = document.querySelector(`[data-exec="${CSS.escape(prevOpen)}"]`)?.dataset.path;
+            if (path) execute(prevOpen, path);
+          }
+        };
+      });
+    }
+
+    async function init() {
+      $("baseUrl").value = window.location.origin;
+      renderPresets();
+
+      $("filter").oninput = (e) => {
+        filterText = e.target.value;
+        render();
+      };
+
+      $("baseUrl").onchange = () => loadSpec();
+
+      try {
+        await loadSpec();
+      } catch (err) {
+        $("app").innerHTML = `<p class="empty">Failed to load OpenAPI spec: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    async function loadSpec() {
+      $("app").innerHTML = '<div class="loading-bar">Loading OpenAPI spec…</div>';
+      const res = await fetch(`${getBase()}/docs/json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      spec = await res.json();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>

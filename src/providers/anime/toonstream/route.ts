@@ -17,11 +17,10 @@ const MOVIE_INFO_CACHE_TTL = 3600 * 24 * 14; // 14 days
 const SERIES_INFO_CACHE_TTL = 3600 * 24 * 3; // 3 days
 
 import { env } from "../../../core/runtime";
+import { SERVER_ORIGIN } from "../../../core/config";
 
-export const SERVER_ORIGIN = env.SERVER_ORIGIN || "";
+export { SERVER_ORIGIN };
 export const PROXIFY = Boolean(env.PROXIFY) || false;
-
-if (!SERVER_ORIGIN && env.NODE_ENV !== "test") throw new Error("set SERVER_ORIGIN at .env!");
 
 console.log("auto source proxy is ", PROXIFY);
 
