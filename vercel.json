@@ -10,9 +10,9 @@
     }
   ],
   "functions": {
-    "api/**": {
+    "api/index.ts": {
       "maxDuration": 60,
-      "includeFiles": "tester/**"
+      "includeFiles": "lib/**, tester/**"
     }
   }
 }

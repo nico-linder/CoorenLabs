@@ -11,7 +11,7 @@
     "start": "bun run src/dev-server.ts",
     "start:node": "node dist/index.js",
     "build:node": "tsc --project tsconfig.json --outDir dist",
-    "build:vercel": "bun build src/vercel.ts --outfile api/index.js --target bun --minify --external puppeteer --external puppeteer-real-browser",
+    "build:vercel": "bun build src/vercel.ts --outfile lib/handler.js --target bun --minify --external puppeteer --external puppeteer-real-browser",
     "build:bun": "bun build src/dev-server.ts --outdir dist --minify --sourcemap",
     "test": "bun run scripts/tests/index.ts",
     "test:vitest": "vitest",

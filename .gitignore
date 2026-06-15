@@ -6,6 +6,7 @@ out
 dist
 build
 api/index.js
+lib/handler.js
 *.tgz
 
 # code coverage
